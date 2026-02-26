@@ -15,6 +15,23 @@ load_dotenv()
 app = FastAPI(title="HerdOfWorms Crypto Prices - Free v1")
 cache = TTLCache(maxsize=1000, ttl=45)
 
+# Telegram notification setup
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+FIRST_HIT_FILE = "/home/jut/crypto-price-mcp/.first_hit_sent"
+
+def send_telegram(message):
+    """Send Telegram notification"""
+    if not BOT_TOKEN or not CHAT_ID:
+        return False
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"}
+        requests.post(url, json=data, timeout=5)
+        return True
+    except:
+        return False
+
 # Initialize limiter
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -28,6 +45,18 @@ async def get_prices(request: Request, coins: str = "bitcoin,ethereum,solana,car
     # Log real IP from Cloudflare headers
     real_ip = request.headers.get('CF-Connecting-IP') or request.headers.get('X-Forwarded-For') or request.client.host
     print(f"[HIT] IP: {real_ip} | Coins: {coins} | Time: {datetime.utcnow().isoformat()}")
+    
+    # Check for first real external hit (not localhost or local network)
+    if not os.path.exists(FIRST_HIT_FILE) and real_ip and not real_ip.startswith(("127.", "192.168.", "10.", "::1")):
+        try:
+            message = f"🎉 *FIRST REAL HIT!*\n\nIP: `{real_ip}`\nCoins: {coins}\nTime: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC\n\nYour crypto server is live and serving real users!"
+            if send_telegram(message):
+                # Create flag file so we only notify once
+                with open(FIRST_HIT_FILE, 'w') as f:
+                    f.write(f"First hit from {real_ip} at {datetime.utcnow().isoformat()}")
+                print(f"[NOTIFICATION] First hit alert sent to Telegram!")
+        except Exception as e:
+            print(f"[ERROR] Failed to send Telegram notification: {e}")
     
     key = f"prices_{coins}"
     if key in cache:
