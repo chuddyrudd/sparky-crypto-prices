@@ -54,6 +54,19 @@ curl http://localhost:8000/health
 ### GET /.well-known/agent.json
 Agent card for discovery.
 
+## 🤖 OpenClaw Agent Compatible
+
+This API works seamlessly with [OpenClaw](https://openclaw.ai) agents. Deploy it and let your agents fetch real-time crypto prices via HTTP.
+
+**Agent usage example:**
+```python
+# OpenClaw agent calling this API
+result = web_fetch("http://localhost:8000/prices?coins=bitcoin,ethereum")
+# Returns structured JSON with current prices
+```
+
+**Search terms:** `openclaw agent tools`, `ai agent crypto api`, `mcp alternative http api`
+
 ## Features
 
 - ✅ 1000+ cryptocurrencies (any CoinGecko-supported coin)
@@ -62,6 +75,7 @@ Agent card for discovery.
 - ✅ 24-hour price change data
 - ✅ Telegram notification on first real external hit
 - ✅ No API key required
+- ✅ **OpenClaw agent ready** (HTTP REST, no MCP complexity)
 
 ## Supported Coins
 
