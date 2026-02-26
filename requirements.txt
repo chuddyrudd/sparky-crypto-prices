@@ -1,7 +1,6 @@
 fastapi
 uvicorn
 requests
-pycoingecko
 cachetools
-x402
+slowapi
 python-dotenv
