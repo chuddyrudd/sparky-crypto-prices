@@ -25,6 +25,10 @@ PORT = int(os.getenv("PORT", 8000))
 @app.get("/prices")
 @limiter.limit("15/minute")
 async def get_prices(request: Request, coins: str = "bitcoin,ethereum,solana,cardano"):
+    # Log real IP from Cloudflare headers
+    real_ip = request.headers.get('CF-Connecting-IP') or request.headers.get('X-Forwarded-For') or request.client.host
+    print(f"[HIT] IP: {real_ip} | Coins: {coins} | Time: {datetime.utcnow().isoformat()}")
+    
     key = f"prices_{coins}"
     if key in cache:
         return cache[key]
@@ -56,7 +60,7 @@ async def agent_card():
     return {
         "name": "Sparky Crypto Prices Oracle",
         "description": "Real-time cached CoinGecko USD prices + 24h change. Free v1, no key, rate limited. Paid x402 v2 soon.",
-        "url": "https://606fed64773215ab-143-105-23-12.serveousercontent.com/prices",
+        "url": "https://fresh-management-studying-slight.trycloudflare.com/prices",
         "capabilities": ["prices", "crypto-data", "real-time-quotes"],
         "protocol": "http"
     }
