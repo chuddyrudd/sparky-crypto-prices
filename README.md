@@ -1,6 +1,8 @@
-# Crypto Prices API
+# Sparky Tools API — Crypto + Web Fetch
 
-Real-time cryptocurrency prices via HTTP API. Free, cached, rate-limited access to CoinGecko data.
+Real-time cryptocurrency prices + clean web content extraction via HTTP API. Free, cached, rate-limited.
+
+**Endpoints:** `/prices` for crypto, `/fetch` for web scraping
 
 **⚠️ Note:** This is an HTTP REST API server, not an MCP (Model Context Protocol) server.
 
@@ -54,25 +56,61 @@ curl http://localhost:8000/health
 ### GET /.well-known/agent.json
 Agent card for discovery.
 
-## 🤖 OpenClaw Agent Compatible
+### GET /fetch
+Extract clean structured content from any URL.
 
-This API works seamlessly with [OpenClaw](https://openclaw.ai) agents. Deploy it and let your agents fetch real-time crypto prices via HTTP.
-
-**Agent usage example:**
-```python
-# OpenClaw agent calling this API
-result = web_fetch("http://localhost:8000/prices?coins=bitcoin,ethereum")
-# Returns structured JSON with current prices
+```bash
+curl "http://localhost:8000/fetch?url=example.com"
 ```
 
-**Search terms:** `openclaw agent tools`, `ai agent crypto api`, `mcp alternative http api`
+**Parameters:**
+- `url` (required): Any URL to fetch. Auto-prepends https:// if missing.
+
+**Response:**
+```json
+{
+  "timestamp": "2026-02-26T11:45:00",
+  "url": "https://example.com",
+  "title": "Example Domain",
+  "meta_description": "...",
+  "clean_content": "Article text without ads/HTML garbage...",
+  "tables": [],
+  "links": ["https://example.com/page1", "..."],
+  "images": ["https://example.com/img.jpg"],
+  "source": "Sparky Web Fetch (requests + trafilatura)"
+}
+```
+
+## 🤖 OpenClaw Agent Compatible
+
+This API works seamlessly with [OpenClaw](https://openclaw.ai) agents. Deploy it and let your agents fetch crypto prices OR scrape web content.
+
+**Agent usage examples:**
+```python
+# Get crypto prices
+result = web_fetch("http://localhost:8000/prices?coins=bitcoin,ethereum")
+
+# Scrape web content
+result = web_fetch("http://localhost:8000/fetch?url=example.com")
+```
+
+**Search terms:** `openclaw agent tools`, `ai agent crypto api`, `mcp alternative http api`, `agent web scraper`
 
 ## Features
 
+**Crypto (`/prices`):**
 - ✅ 1000+ cryptocurrencies (any CoinGecko-supported coin)
-- ✅ 45-second cache (reduces API calls)
-- ✅ Rate limited: 15 requests/minute per IP
+- ✅ 45-second cache
+- ✅ Rate limited: 15 requests/minute
 - ✅ 24-hour price change data
+
+**Web Fetch (`/fetch`):**
+- ✅ Clean article extraction (no ads, no HTML garbage)
+- ✅ 10-minute cache per URL
+- ✅ Rate limited: 10 requests/minute
+- ✅ Returns: title, meta, content, tables, links, images
+
+**General:**
 - ✅ Telegram notification on first real external hit
 - ✅ No API key required
 - ✅ **OpenClaw agent ready** (HTTP REST, no MCP complexity)
@@ -124,17 +162,26 @@ pm2 start app.py --name crypto-api --interpreter python3
 │   Client    │◄────────────────►│  FastAPI Server │◄────────────►│  CoinGecko   │
 │  (Any HTTP) │    JSON Response │  (this repo)    │   REST API    │     API      │
 └─────────────┘                  └─────────────────┘               └──────────────┘
+                                        │
+                                        ▼
+                              ┌───────────────────┐
+                              │   Web Pages       │
+                              │   (any URL)       │
+                              └───────────────────┘
 ```
 
 - **Framework:** FastAPI
-- **Cache:** TTLCache (45 seconds)
-- **Rate Limiting:** slowapi (15/min per IP)
-- **Data Source:** CoinGecko API (free tier)
+- **Crypto Cache:** TTLCache (45 seconds)
+- **Web Fetch Cache:** TTLCache (10 minutes)
+- **Rate Limiting:** slowapi
+- **Data Sources:** CoinGecko API (crypto) + Any URL (web fetch)
+- **Extraction:** trafilatura + BeautifulSoup
 
 ## Requirements
 
 - Python 3.8+
 - `fastapi`, `uvicorn`, `requests`, `cachetools`, `slowapi`, `python-dotenv`
+- `beautifulsoup4`, `lxml`, `trafilatura` (for web fetch)
 
 See `requirements.txt` for full list.
 
