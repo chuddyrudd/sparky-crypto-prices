@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+server.log
+ALERTS.log
+.first_hit_sent
+*.log
+venv/
+.DS_Store

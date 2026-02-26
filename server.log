@@ -1,9 +1,0 @@
-INFO:     Started server process [662647]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:45440 - "GET /health HTTP/1.1" 200 OK
-/home/jut/crypto-price-mcp/app.py:40: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-  "timestamp": datetime.utcnow().isoformat(),
-INFO:     127.0.0.1:45448 - "GET /prices?coins=bitcoin,ethereum HTTP/1.1" 200 OK
-INFO:     127.0.0.1:33724 - "GET /.well-known/agent.json HTTP/1.1" 200 OK
