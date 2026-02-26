@@ -1,4 +1,4 @@
-# HerdOfWorms Crypto Prices API
+# Crypto Prices API
 
 Real-time cryptocurrency prices via HTTP API. Free, cached, rate-limited access to CoinGecko data.
 

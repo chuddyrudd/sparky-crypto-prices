@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 
-app = FastAPI(title="HerdOfWorms Crypto Prices - Free v1")
+app = FastAPI(title="Crypto Prices API - Free v1")
 cache = TTLCache(maxsize=1000, ttl=45)
 
 # Telegram notification setup
