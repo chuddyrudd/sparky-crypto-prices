@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+pycoingecko
+cachetools
+x402
+python-dotenv
