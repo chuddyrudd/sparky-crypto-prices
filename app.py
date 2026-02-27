@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from bs4 import BeautifulSoup
+from ddgs import DDGS
 
 load_dotenv()
 
@@ -67,7 +68,7 @@ async def web_fetch(request: Request, url: str):
     except Exception as e:
         raise HTTPException(500, str(e))
 
-# NEW: STRUCTURED SEARCH - HIGHEST VOLUME TOOL
+# === STRUCTURED SEARCH - MAX VOLUME TOOL ===
 @app.get("/search")
 @limiter.limit("8/minute")
 async def web_search(request: Request, q: str):
@@ -75,22 +76,11 @@ async def web_search(request: Request, q: str):
     if key in cache:
         return cache[key]
     try:
-        r = requests.get(f"https://html.duckduckgo.com/html/?q={requests.utils.quote(q)}", headers={"User-Agent": "SparkyBot/1.0"}, timeout=8)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "lxml")
-        results = []
-        for result in soup.select(".result"):
-            title = result.select_one(".result__title a")
-            snippet = result.select_one(".result__snippet")
-            if title and snippet:
-                results.append({
-                    "title": title.get_text(strip=True),
-                    "url": title["href"],
-                    "snippet": snippet.get_text(strip=True)
-                })
-        result = {"timestamp": datetime.utcnow().isoformat(), "query": q, "results": results[:10], "source": "DuckDuckGo via Sparky", "note": "Clean structured search - free v1"}
-        cache[key] = result
-        return result
+        with DDGS() as ddgs:
+            results = list(ddgs.text(q, max_results=10))
+            result = {"timestamp": datetime.utcnow().isoformat(), "query": q, "results": results, "source": "DuckDuckGo via Sparky", "note": "Clean structured search - free v1"}
+            cache[key] = result
+            return result
     except Exception as e:
         raise HTTPException(500, str(e))
 
@@ -102,7 +92,7 @@ async def health():
 async def agent_card():
     return {
         "name": "Sparky Tools",
-        "description": "Crypto prices + Clean Web Fetch + Structured Search. Free v1, no key, cached. Agents hammer /search?q= and /fetch?url=",
+        "description": "Crypto prices + Clean Web Fetch + Structured Search (highest volume tool). Free v1, no key. Agents hammer /search?q=",
         "url": "https://YOUR-TUNNEL/prices or /fetch or /search?q=",
         "capabilities": ["crypto-prices", "web-fetch", "structured-search"],
         "protocol": "http"
