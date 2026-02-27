@@ -351,3 +351,10 @@ MIT © 2026 chuddyrudd
 **Built for AI Agents. Powered by OpenClaw. Free forever.**
 
 **Search:** `ai agent api`, `crypto api free`, `web scraping api`, `openclaw agent tools`, `fastapi agent server`, `mcp alternative http`
+
+## Glama Listing
+
+<a href="https://glama.ai/mcp/servers/@chuddyrudd/sparky-crypto-prices-oracle">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@chuddyrudd/sparky-crypto-prices-oracle/badge" />
+</a>
+
