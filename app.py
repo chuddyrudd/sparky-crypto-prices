@@ -92,10 +92,44 @@ async def health():
 async def agent_card():
     return {
         "name": "Sparky Tools",
-        "description": "Crypto prices + Clean Web Fetch + Structured Search (highest volume tool). Free v1, no key. Agents hammer /search?q=",
-        "url": "https://YOUR-TUNNEL/prices or /fetch or /search?q=",
-        "capabilities": ["crypto-prices", "web-fetch", "structured-search"],
-        "protocol": "http"
+        "description": "Free, fast, no-key tools for AI agents: real-time crypto prices, clean web fetch, structured search.",
+        "version": "1.0",
+        "url": "https://YOUR-CURRENT-TUNNEL-HERE",
+        "protocol": "http",
+        "tools": [
+            {
+                "name": "get_prices",
+                "description": "Real-time USD prices + 24h change for any crypto. Cached. Example: ?coins=bitcoin,ethereum",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "coins": {"type": "string", "description": "Comma-separated coin IDs (bitcoin,ethereum,solana,etc)"}
+                    }
+                }
+            },
+            {
+                "name": "web_fetch",
+                "description": "Fetch any URL and return clean structured data: title, content, tables, links, images. No ads/HTML garbage.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "url": {"type": "string", "description": "Full URL (https:// or example.com)"}
+                    },
+                    "required": ["url"]
+                }
+            },
+            {
+                "name": "web_search",
+                "description": "Structured web search. Returns clean title, url, snippet for top 10 results.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "q": {"type": "string", "description": "Search query"}
+                    },
+                    "required": ["q"]
+                }
+            }
+        ]
     }
 
 if __name__ == "__main__":
