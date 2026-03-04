@@ -38,6 +38,7 @@
 |---------|----------|-------|------------|
 | **Crypto Prices** | `/prices` | 45 sec | 15/min |
 | **Web Scraping** | `/fetch` | 10 min | 10/min |
+| **Web Search** | `/search` | 2 hours | 20/min |
 | **Health Check** | `/health` | none | none |
 | **Agent Discovery** | `/.well-known/agent.json` | none | none |
 
@@ -53,6 +54,12 @@
 - ✅ Uses `trafilatura` + `BeautifulSoup` (battle-tested stack)
 - ✅ Perfect for AI agents that need clean web content
 - ✅ Caches results per URL (10 minutes)
+
+### Web Search (`/search`)
+- ✅ **DuckDuckGo-powered search** — no API key needed
+- ✅ Structured results: title, URL, snippet
+- ✅ Perfect for research and discovery
+- ✅ 2-hour cache for common queries
 
 ### For AI Agents
 - ✅ **OpenClaw compatible** — HTTP REST, no MCP complexity
@@ -161,6 +168,40 @@ curl "https://sparky-crypto-prices.onrender.com/fetch?url=example.com"
 - Data mining: Scrape structured data from websites
 - Monitoring: Track changes on web pages
 - Integration: Feed clean content to LLMs
+
+---
+
+### GET /search
+
+Web search via DuckDuckGo. Returns structured search results.
+
+```bash
+curl "https://sparky-crypto-prices.onrender.com/search?q=ai+agent+tools"
+```
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `q` | string | Yes | Search query |
+
+**Response:**
+```json
+{
+  "timestamp": "2026-02-26T11:45:00",
+  "query": "ai agent tools",
+  "results": [
+    {"title": "...", "href": "...", "body": "..."}
+  ],
+  "source": "DuckDuckGo",
+  "_cache": "LIVE",
+  "next_actions": [...]
+}
+```
+
+**Use Cases:**
+- Research: Find sources on any topic
+- Discovery: Find tools, APIs, documentation
+- Validation: Cross-check information across sources
 
 ---
 
