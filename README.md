@@ -4,8 +4,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Agent%20Ready-purple)](https://openclaw.ai)
+[![Live](https://img.shields.io/badge/Live-Render-brightgreen)](https://sparky-crypto-prices.onrender.com)
 
 > **Free HTTP API for AI Agents** — Real-time cryptocurrency prices + intelligent web scraping. No API keys, no rate limits for personal use, built for OpenClaw and other AI agent platforms.
+
+🌐 **Live API:** `https://sparky-crypto-prices.onrender.com`
 
 **Keywords:** `ai agent api`, `crypto price api`, `web scraping api`, `openclaw tools`, `agent web fetch`, `mcp alternative`, `free crypto api`, `structured web extraction`, `ai agent http tools`, `fastapi agent server`
 
@@ -61,6 +64,16 @@
 
 ## 🚀 Quick Start
 
+### Use the Live API (No Setup)
+```bash
+# Test the live endpoint
+curl "https://sparky-crypto-prices.onrender.com/health"
+
+# Get crypto prices
+curl "https://sparky-crypto-prices.onrender.com/prices?coins=bitcoin,ethereum,solana"
+```
+
+### Run Locally
 ```bash
 # 1. Clone
 git clone https://github.com/chuddyrudd/sparky-crypto-prices.git
@@ -88,7 +101,7 @@ curl http://localhost:8000/health
 Real-time cryptocurrency prices.
 
 ```bash
-curl "http://localhost:8000/prices?coins=bitcoin,ethereum,solana"
+curl "https://sparky-crypto-prices.onrender.com/prices?coins=bitcoin,ethereum,solana"
 ```
 
 **Parameters:**
@@ -119,7 +132,7 @@ curl "http://localhost:8000/prices?coins=bitcoin,ethereum,solana"
 Intelligent web content extraction.
 
 ```bash
-curl "http://localhost:8000/fetch?url=example.com"
+curl "https://sparky-crypto-prices.onrender.com/fetch?url=example.com"
 ```
 
 **Parameters:**
@@ -156,7 +169,7 @@ curl "http://localhost:8000/fetch?url=example.com"
 Health check endpoint.
 
 ```bash
-curl http://localhost:8000/health
+curl https://sparky-crypto-prices.onrender.com/health
 ```
 
 **Response:**
