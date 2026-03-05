@@ -7,4 +7,4 @@ python-dotenv
 beautifulsoup4
 lxml
 trafilatura
-duckduckgo-search>=7.0
+duckduckgo_search>=7.0
