@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from bs4 import BeautifulSoup
-# from ddgs import DDGS  # Temporarily disabled - install issues on Render
+# Search temporarily using Bing API or fallback
 import logging
 
 load_dotenv()
@@ -299,11 +299,44 @@ async def web_fetch(request: Request, url: str):
         log_event("DOWNSTREAM_ERROR", run_id, {"error": str(e)})
         raise HTTPException(500, str(e))
 
-# @app.get("/search")  # Temporarily disabled - duckduckgo_search install issues on Render
-# @limiter.limit("20/minute")
-# async def web_search(request: Request, q: str):
-#     """Web search via DuckDuckGo - temporarily disabled"""
-#     raise HTTPException(503, "Search temporarily unavailable. Use /prices or /fetch.")
+@app.get("/search")
+@limiter.limit("20/minute")
+async def web_search(request: Request, q: str):
+    """Web search via Bing API (fallback if no key)"""
+    run_id = f"search_{int(time.time()*1000)}"
+    
+    # Fallback: use web scrape of Bing search results
+    try:
+        search_url = f"https://www.bing.com/search?q={q.replace(' ', '+')}"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        r = requests.get(search_url, headers=headers, timeout=10)
+        
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(r.text, 'html.parser')
+        
+        results = []
+        for item in soup.select('.b_algo')[:5]:
+            title = item.select_one('h2')
+            link = item.select_one('a')
+            snippet = item.select_one('.b_caption p')
+            
+            if title and link:
+                results.append({
+                    "title": title.get_text(strip=True),
+                    "href": link.get('href', ''),
+                    "body": snippet.get_text(strip=True) if snippet else ""
+                })
+        
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "query": q,
+            "results": results,
+            "source": "Bing (scraped)",
+            "_cache": "LIVE",
+            "_run_id": run_id
+        }
+    except Exception as e:
+        raise HTTPException(503, f"Search temporarily limited: {str(e)}")
 
 @app.get("/trust")
 async def trust_card():
