@@ -135,6 +135,57 @@ def generate_next_actions(endpoint, coin=None, url=None, query=None):
         ]
     return actions
 
+# Telegram notification setup (optional - failures don't break app)
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+KNOWN_IPS_FILE = "/tmp/known_ips.txt"  # Use /tmp for Render write access
+
+def notify_new_ip(ip, user_agent, referer, endpoint):
+    """Send Telegram notification for new IP - never raises exceptions"""
+    if not BOT_TOKEN or not CHAT_ID:
+        return  # Silently skip if not configured
+    
+    try:
+        # Check if IP is new
+        known_ips = set()
+        if os.path.exists(KNOWN_IPS_FILE):
+            with open(KNOWN_IPS_FILE, 'r') as f:
+                known_ips = set(line.strip() for line in f)
+        
+        if ip in known_ips:
+            return  # Already known
+        
+        # Add to known IPs
+        with open(KNOWN_IPS_FILE, 'a') as f:
+            f.write(f"{ip}\n")
+        
+        # Send Telegram message (fire-and-forget, no blocking)
+        message = f"🆕 *NEW Crypto API User!*\n\n"
+        message += f"📍 IP: `{ip}`\n"
+        message += f"🤖 Agent: `{user_agent[:50]}`\n"
+        message += f"🔗 Endpoint: `{endpoint}`\n"
+        if referer and referer != "none":
+            message += f"📎 Referer: `{referer[:40]}`\n"
+        message += f"\n⏰ {datetime.utcnow().isoformat()} UTC"
+        message += "\n\n💡 This IP will not trigger future notifications."
+        
+        import urllib.request
+        import urllib.parse
+        
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = urllib.parse.urlencode({
+            "chat_id": CHAT_ID,
+            "text": message,
+            "parse_mode": "Markdown"
+        }).encode()
+        
+        # Non-blocking fire-and-forget
+        req = urllib.request.Request(url, data=data, method='POST')
+        urllib.request.urlopen(req, timeout=3)
+        
+    except Exception:
+        pass  # Silently fail - don't break the API
+
 @app.middleware("http")
 async def log_request_source(request: Request, call_next):
     """Log User-Agent and Referer to identify call sources. Non-blocking, transparent to callers."""
@@ -145,6 +196,8 @@ async def log_request_source(request: Request, call_next):
     # Only log tool endpoints (skip health checks to reduce noise)
     if request.url.path in ["/prices", "/fetch", "/search"]:
         logger.info(f"SOURCE: ip={client_ip} ua={user_agent[:80]} referer={referer[:40]}")
+        # Fire notification (non-blocking)
+        notify_new_ip(client_ip, user_agent, referer, request.url.path)
     
     return await call_next(request)
 
