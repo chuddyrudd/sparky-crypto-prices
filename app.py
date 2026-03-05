@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from bs4 import BeautifulSoup
-from ddgs import DDGS
+# from ddgs import DDGS  # Temporarily disabled - install issues on Render
 import logging
 
 load_dotenv()
@@ -134,6 +134,19 @@ def generate_next_actions(endpoint, coin=None, url=None, query=None):
             {"task": "rank_by_authority", "tool": "authority_ranker", "params": {"query": query}}
         ]
     return actions
+
+@app.middleware("http")
+async def log_request_source(request: Request, call_next):
+    """Log User-Agent and Referer to identify call sources. Non-blocking, transparent to callers."""
+    user_agent = request.headers.get("user-agent", "unknown")
+    referer = request.headers.get("referer", "none")
+    client_ip = request.client.host if request.client else "unknown"
+    
+    # Only log tool endpoints (skip health checks to reduce noise)
+    if request.url.path in ["/prices", "/fetch", "/search"]:
+        logger.info(f"SOURCE: ip={client_ip} ua={user_agent[:80]} referer={referer[:40]}")
+    
+    return await call_next(request)
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -286,64 +299,11 @@ async def web_fetch(request: Request, url: str):
         log_event("DOWNSTREAM_ERROR", run_id, {"error": str(e)})
         raise HTTPException(500, str(e))
 
-@app.get("/search")
-@limiter.limit("20/minute")
-async def web_search(request: Request, q: str):
-    run_id = f"search_{int(time.time()*1000)}"
-    inputs = {"query": q, "endpoint": "search"}
-    
-    try:
-        l0_key = f"l0_search_{q.lower()}"
-        if l0_key in L0_CACHE:
-            result = L0_CACHE[l0_key]
-            result["_cache"] = "L0_HIT"
-            result["_run_id"] = run_id
-            return result
-        
-        l1_key = f"l1_search_{q.lower()}"
-        cached = l1_get(l1_key)
-        if cached and not cached.get("_stale"):
-            L0_CACHE[l0_key] = cached
-            cached["_cache"] = "L1_HIT"
-            cached["_run_id"] = run_id
-            return cached
-        
-        if not check_circuit("search"):
-            if cached and cached.get("_stale"):
-                cached["_cache"] = "STALE_DEGRADED"
-                return cached
-            raise HTTPException(503, "Search service temporarily unavailable")
-        
-        with DDGS() as ddgs:
-            results = list(ddgs.text(q, max_results=10))
-            
-            result = {
-                "timestamp": datetime.utcnow().isoformat(),
-                "query": q,
-                "results": results,
-                "source": "DuckDuckGo",
-                "_cache": "LIVE",
-                "_run_id": run_id,
-                "next_actions": generate_next_actions("search", query=q),
-                "attestation": generate_attestation(run_id, inputs, {"query": q, "result_count": len(results)}, TOOL_VERSION),
-                "trust_signals": {
-                    "result_count": len(results),
-                    "circuit_state": "CLOSED"
-                }
-            }
-            
-            L0_CACHE[l0_key] = result
-            l1_set(l1_key, result, ttl=7200)
-            
-            CIRCUIT_STATE["search"]["failures"] = 0
-            log_event("TOOL_CALLED", run_id, {"endpoint": "search", "query": q[:50]})
-            
-            return result
-            
-    except Exception as e:
-        record_failure("search")
-        log_event("DOWNSTREAM_ERROR", run_id, {"error": str(e)})
-        raise HTTPException(500, str(e))
+# @app.get("/search")  # Temporarily disabled - duckduckgo_search install issues on Render
+# @limiter.limit("20/minute")
+# async def web_search(request: Request, q: str):
+#     """Web search via DuckDuckGo - temporarily disabled"""
+#     raise HTTPException(503, "Search temporarily unavailable. Use /prices or /fetch.")
 
 @app.get("/trust")
 async def trust_card():
@@ -436,3 +396,5 @@ async def health():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=PORT)
+
+# For Render deployment: uvicorn app:app --host 0.0.0.0 --port $PORT
